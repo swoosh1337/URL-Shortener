@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
+	"golang.org/x/exp/slog"
 	"log"
-	"log/slog"
 	"os"
 	"url-shortener/internal/config"
+	"url-shortener/internal/lib/logger/sl"
+	"url-shortener/internal/storage/sqlite"
 )
 
 const (
@@ -23,8 +24,28 @@ func main() {
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
 
-	// TODO: init db: sqlite
+	log.Info("Starting server", slog.String("env", cfg.Env))
+	log.Debug("Debug is enabled")
 
+	storage, err := sqlite.New(cfg.StoragePath)
+	if err != nil {
+		log.Error("Failed to create storage", sl.Err(err))
+		os.Exit(1)
+	}
+
+	_, err = storage.SaveURL("https://www.google.com", "google")
+	if err != nil {
+		log.Error("Failed to save url", sl.Err(err))
+		os.Exit(1)
+	}
+
+	_, err = storage.SaveURL("https://www.google.com", "google")
+	if err != nil {
+		log.Error("Failed to save url", sl.Err(err))
+		os.Exit(1)
+	}
+
+	_ = storage
 	// TODO: init router: chi, "chi render"
 
 	// TODO: run server:
